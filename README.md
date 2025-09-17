@@ -1,6 +1,7 @@
 link aplikasi PWS: https://marlond-leanderd-soco-footballshop.pbp.cs.ui.ac.id/
 Nama aplikasi: SoCo (Soccer Commerce)
 
+Tugas 2
 1. Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step (bukan hanya sekadar mengikuti tutorial).
     a.  Membuat sebuah proyek Django baru.
         jawaban:
@@ -92,3 +93,39 @@ Nama aplikasi: SoCo (Soccer Commerce)
 
 6. Apakah ada feedback untuk asisten dosen tutorial 1 yang telah kamu kerjakan sebelumnya?
     jawaban: Tidak ada. Semua langkah-langkah yang diberikan dalam tutorial 1 sudah jelas, dan saya dapat menerapkannya dengan baik ketika melakukan pembelajaran pengembangan perangkat lunak menggunakan framework Django.
+
+
+Tugas 3: Implementasi Form dan Data Delivery pada Django
+1. Jelaskan mengapa kita memerlukan data delivery dalam pengimplementasian sebuah platform?
+    Jawaban: Data delivery adalah cara untuk mengirim dan menampilkan data dari server ke pengguna atau ke sistem lain. Tanpa data delivery, aplikasi tidak dapat menampilkan informasi yang dibutuhkan oleh user. Sebagai contoh, toko online perlu mengirim data produk dari database ke halaman web agar pembeli bisa melihat daftar barang.
+
+    
+2. Menurutmu, mana yang lebih baik antara XML dan JSON? Mengapa JSON lebih populer dibandingkan XML?
+    Jawaban: JSON lebih sering dipakai karena lebih ringkas dan tidak banyak tag seperti XML, mudah dipahami oleh manusia dan juga komputer, serta lebih cocok digunakan untuk aplikasi modern, sehingga JSON dapat dikatakan lebih praktis dan membuatnya lebih populer dibandingkan XML.
+
+3. Jelaskan fungsi dari method is_valid() pada form Django dan mengapa kita membutuhkan method tersebut?
+    Jawaban: is_valid() merupakan fungsi yang berguna untuk mengecek apakah data yang diisi oleh pengguna sudah benar. Jika semua data sudah sesuai atau valid, maka data baru bisa disimpan ke database. Jika tidak valid. Django akan memberi tahu error-nya. Method ini diperlukan agar data yang masuk ke database sudah dipastikan aman dan sesuai dengan aturan yang diterapkan.
+
+4. Mengapa kita membutuhkan csrf_token saat membuat form di Django? Apa yang dapat terjadi jika kita tidak menambahkan csrf_token pada form Django? Bagaimana hal tersebut dapat dimanfaatkan oleh penyerang?
+    Jawaban: csrf_token difungsikan sebagai pengaman agar form hanya dapat dikirimkan dari website kita sendiri. Jika tidak ada csrf_token, pihak luar dapat membuat form palsu di luar website dan memaksa pengguna yang sedang login untuk mengirim data tanpa sadar, seperti ketika pengguna ingin memesan barang atau mengganti data penting. Dengan menggunakan csrf_token, serangan seperti ini tidak dapat dilakukan.
+
+5. Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step (bukan hanya sekadar mengikuti tutorial).
+    Jawaban: 
+        a. Langkah pertama yang dilakukan adalah membuat base template terlebih dahulu. Base template diletakkan dalam file base.html sebagai kerangka utama proyek.
+        b. Langkah selanjutnya adalah dengan melakukan finalisasi model product terlebih dahulu dengan menambahkan field seperti product_views dan created_at. Saya juga menambahkan beberapa kategori yang bisa dipilih sesuai dengan produk yang ingin dijual. Disini saya perlu menjalankan kembali python manage.py makemigrations dan python manage.py migrate karena mengubah model yang ada.
+        c. Dilanjutkan dengan membuat form yaitu membuat ProductForm dengan field yang dapat diisi oleh pemilik toko.
+        d. Berikutnya adalah menambahkan beberapa fungsi dalam views.py, seperti create_product, show_product, serta endpoint untuk show_json, show_xml, show_json_by_id, show_xml_by_id.
+        e. Fungsi-fungsi yang telah ditambahkan di views.py kemudian dihubungkan ke urls.py dengan membuat URL routing, misalnya /json/, /xml/, /json/<id>/, /xml/<id>/.
+        f. Langkah berikutnya adalah membuat template halaman seperti form tambah produk (create_product.html) dan detail produk (product_detail.html) serta menampilkan daftar produk menggunakan main.html.
+        g. Setelah itu, proyek dicoba untuk dijalankan secara lokal melalui komputer, menambahkan produk baru lewat form, serta mencoba membuka endpoint JSON dan XML untuk melihat data produk yang telah ditambah melalui form.
+
+6. Apakah ada feedback untuk asdos di tutorial 2 yang sudah kalian kerjakan?
+    Jawaban: Tutorial yang disediakan oleh asisten dosen telah menjelaskan bagian form dan data delivery dengan rinci sehingga dapat membantu memahami dasar penggunaan template, form, dan data delivery di Django. 
+
+berikut terlampir hasil screenshot ketika mengakses 4 URL di poin 2 menggunakan Postman:
+![alt text](<JSON on Postman.png>)
+![alt text](<XML on Postman.png>)
+![alt text](<JSON with ID on Postman.png>)
+![alt text](<XML with ID on Postman.png>)
+
+
