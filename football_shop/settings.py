@@ -34,6 +34,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "marlond-leanderd-soco-footballshop.pbp.cs.ui.ac.id"]
 
+# Setting for Deploy PWS
 CSRF_TRUSTED_ORIGINS = [
     "https://marlond-leanderd-soco-footballshop.pbp.cs.ui.ac.id"
 ]
