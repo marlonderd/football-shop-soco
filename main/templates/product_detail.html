@@ -1,27 +1,88 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>{{ product.name }} - SoCo</title>
+{% endblock meta %}
+
 {% block content %}
-<p><a href="{% url 'main:show_main' %}"><button>← Back to Product List</button></a></p>
+<div class="bg-gray-50 w-full pt-20 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="mb-6">
+            <a href="{% url 'main:show_main' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                ← Back to Products
+            </a>
+        </div>
+        
+        <article class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+            
+            <div class="p-6 sm:p-8">
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                    <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-purple-700 text-white">
+                        {{ product.get_category_display }}
+                    </span>
+                    {% if product.is_featured %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Featured
+                        </span>
+                    {% endif %}
+                    {% if product.is_product_hot %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">
+                            Hot
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
+                    {{ product.name }}
+                </h1>
 
-<h1>{{ product.name }}</h1>
-<p>
-  <b>{{ product.get_category_display }}</b>
-  {% if product.is_featured %} | <b>Featured</b>{% endif %}
-  {% if product.is_product_hot %} | <b>Hot</b>{% endif %}
-  | <i>{{ product.created_at|date:"d M Y, H:i" }}</i>
-  | Views: {{ product.product_views }}
-</p>
+                <div class="my-4">
+                    <span class="text-3xl font-bold text-gray-800">Rp {{ product.price }}</span>
+                    <span class="ml-4 text-sm font-medium {% if product.stock > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        Stock: {{ product.stock }}
+                    </span>
+                </div>
+                
+                <div class="flex flex-wrap items-center text-sm text-gray-500 gap-4 border-t border-gray-100 pt-4">
+                    <time datetime="{{ product.created_at|date:'c' }}">
+                        Added on: {{ product.created_at|date:"M j, Y g:i A" }}
+                    </time>
+                    <span>{{ product.product_views }} views</span>
+                </div>
+            </div>
 
-{% if product.thumbnail %}
-  <img src="{{ product.thumbnail }}" alt="Product thumbnail" width="300"><br /><br />
-{% endif %}
+            {% if product.thumbnail %}
+                <div class="px-6 sm:px-8">
+                    <img src="{{ product.thumbnail }}" 
+                         alt="{{ product.name }}" 
+                         class="w-full h-auto max-h-96 object-contain rounded-lg">
+                </div>
+            {% endif %}
 
-<p>{{ product.description }}</p>
-<p><b>Price:</b> Rp {{ product.price }}</p>
+            <div class="p-6 sm:p-8">
+                <div class="prose prose-lg max-w-none">
+                    <div class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
+                        {{ product.description }}
+                    </div>
+                </div>
+            </div>
 
-{% if product.user %}
-    <p>Author: {{ product.user.username }}</p>
-{% else %}
-    <p>Author: Anonymous</p>
-{% endif %}
-
+            <div class="border-t border-gray-200 p-6 sm:p-8 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium text-gray-900">
+                            {% if product.user %}
+                                <p>Added by: {{ product.user.username }}</p>
+                            {% else %}
+                                <p>Added by: Anonymous</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+</div>
 {% endblock content %}

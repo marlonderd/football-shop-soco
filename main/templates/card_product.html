@@ -1,0 +1,50 @@
+{% load static %}
+{% load humanize %}
+
+<article class="relative bg-white rounded-lg border border-gray-200 overflow-hidden group">
+  <div class="aspect-w-1 aspect-h-1">
+    {% if product.thumbnail %}
+      <img src="{{ product.thumbnail }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+    {% else %}
+      <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+        <span class="text-gray-400">No Image</span>
+      </div>
+    {% endif %}
+  </div>
+  
+  <div class="p-4 text-center">
+    <p class="text-sm text-gray-500 mb-1">{{ product.get_category_display }}</p>
+    <h3 class="font-semibold text-gray-800 truncate">
+      <a href="{% url 'main:show_product' product.id %}" class="stretched-link">
+        {{ product.name }}
+      </a>
+    </h3>
+    <p class="mt-1 text-lg font-bold text-purple-700">Rp {{ product.price|floatformat:0|intcomma }}</p>
+
+    <div class="mt-2 text-xs font-medium">
+      {% if product.stock > 10 %}
+        <span class="text-green-700 animate-pulse">In Stock: {{ product.stock }}</span>
+      {% elif product.stock > 0 %}
+        <span class="text-yellow-600 animate-pulse">Low Stock: {{ product.stock }} left!</span>
+      {% else %}
+        <span class="text-red-600 font-bold animate-pulse">Out of Stock</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="absolute inset-x-0 bottom-0 bg-white/80 backdrop-blur-sm p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+    <div class="flex items-center justify-center space-x-3">
+      <a href="{% url 'main:show_product' product.id %}" class="flex-1 bg-purple-700 text-white text-center font-semibold py-2 px-4 rounded-md text-sm">
+        View Details
+      </a>
+      {% if user.is_authenticated and product.user == user %}
+        <a href="{% url 'main:edit_product' product.id %}" class="text-gray-500 hover:text-purple-700" title="Edit">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
+        </a>
+        <a href="{% url 'main:delete_product' product.id %}" class="text-gray-500 hover:text-red-600" title="Delete">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</article>

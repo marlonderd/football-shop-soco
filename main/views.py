@@ -13,19 +13,23 @@ from django.urls import reverse
 
 @login_required(login_url='/login')
 def show_main(request):
-    filter_type = request.GET.get("filter", "all")
-    if filter_type == "all":
-        product_list = Product.objects.all()
+    product_filter = request.GET.get('filter')
+    if product_filter == 'my':
+        products = Product.objects.filter(user=request.user)
     else:
-        product_list = Product.objects.filter(user=request.user)
+        products = Product.objects.all()
+
+    category_filter = request.GET.get('category')
+    if category_filter in ['shoes', 'clothes', 'accessories']:
+        products = products.filter(category=category_filter)
 
     context = {
-        'app_name' : 'SoCo',
-        'name': request.user.username,
-        'npm': '2406496201',
-        'class' : 'PBP E',
-        'product_list': product_list,
-        'last_login': request.COOKIES.get('last_login', 'Never')
+        'name': 'Marlond Leanderd',
+        'npm': '2406486201',
+        'class': 'PBP E',
+        'product_list': products,
+        'last_login': request.COOKIES.get('last_login', '-'),
+        'active_category': category_filter,
     }
     return render(request, "main.html", context)
 
@@ -51,6 +55,27 @@ def show_product(request, id):
     }
 
     return render(request, "product_detail.html", context)
+
+def edit_product(request, id):
+    product = get_object_or_404(Product, pk=id)
+
+    form = ProductForm(request.POST or None, instance=product)
+
+    if form.is_valid() and request.method == 'POST':
+        form.save()
+        return redirect('main:show_main')
+
+    context = {
+        'form': form,
+        'product': product
+    }
+
+    return render(request, "edit_product.html", context)
+
+def delete_product(request, id):
+    product = get_object_or_404(Product, pk=id)
+    product.delete()
+    return HttpResponseRedirect(reverse('main:show_main'))
 
 def show_xml(request):
      product_list = Product.objects.all()
