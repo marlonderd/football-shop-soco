@@ -2,9 +2,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF--8" />
+    <meta charset="UTF-8" /> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Football Shop</title>
+    <title>SoCo Football Shop</title>
     
     {% block meta %}
     {% endblock meta %}
@@ -13,17 +13,22 @@
 
     <link rel="stylesheet" href="{% static 'css/global.css' %}"/>
   </head>
-  <body class="bg-gray-100">
+  <body class="bg-gray-100 flex flex-col min-h-screen">
 
     {% block navbar %}
         {% include 'navbar.html' %}
     {% endblock navbar %}
 
-    <main class="container mx-auto mt-4 p-4">
+    <main class="container mx-auto p-4 relative z-0 flex-grow">
       {% block content %} 
       {% endblock content %}
     </main>
 
+    <footer class="mt-auto py-6 border-t border-gray-200 bg-white">
+        <div class="container mx-auto text-center text-gray-500 text-sm">
+            &copy; {% now "Y" %} SoCo Football Shop. All Rights Reserved.
+        </div>
+    </footer>
     <script>
       const btn = document.querySelector("button.mobile-menu-button");
       const menu = document.querySelector(".mobile-menu");
