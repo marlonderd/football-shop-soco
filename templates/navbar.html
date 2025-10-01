@@ -28,21 +28,25 @@
       
       <div class="hidden md:flex items-center space-x-6">
         {% if user.is_authenticated %}
-          <div class="text-right">
-            <div class="text-sm font-medium text-gray-900">{{ name|default:user.username }}</div>
-            <div class="text-xs text-gray-500">{{ npm|default:"Student" }} - {{ class|default:"Class" }}</div>
+          <div class="relative">
+            <button id="user-menu-button" type="button" class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+              <span class="text-sm font-medium text-gray-700">{{ user.username }}</span>
+              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+              <div class="px-4 py-3 border-b border-gray-200">
+                <p class="text-sm font-semibold text-gray-900 truncate">{{ name|default:user.username }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ npm }} - {{ class }}</p>
+              </div>
+              <div class="py-1">
+                <a href="{% url 'main:logout' %}" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                  Logout
+                </a>
+              </div>
+            </div>
           </div>
-          <a href="{% url 'main:logout' %}" class="text-red-600 hover:text-red-700 font-medium transition-colors">
-            Logout
-          </a>
         {% else %}
-          <a href="{% url 'main:login' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-            Login
-          </a>
-          <a href="{% url 'main:register' %}" class="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-md font-medium transition-colors">
-            Register
-          </a>
-        {% endif %}
+          {% endif %}
       </div>
       
       <div class="md:hidden flex items-center">

@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 import datetime
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.db.models import Sum
 
 @login_required(login_url='/login')
 def show_main(request):
@@ -23,13 +24,23 @@ def show_main(request):
     if category_filter in ['shoes', 'clothes', 'accessories']:
         products = products.filter(category=category_filter)
 
+    user_products_count = 0
+    user_products_total_views = 0
+    if request.user.is_authenticated:
+        user_products = Product.objects.filter(user=request.user)
+        user_products_count = user_products.count()
+        aggregation = user_products.aggregate(total_views=Sum('product_views'))
+        user_products_total_views = aggregation['total_views'] or 0
+
     context = {
-        'name': 'Marlond Leanderd',
-        'npm': '2406486201',
-        'class': 'PBP E',
+        'name': 'Marlond Leanderd Batara',
+        'npm': '2406486201',        
+        'class': 'PBP E',            
         'product_list': products,
         'last_login': request.COOKIES.get('last_login', '-'),
         'active_category': category_filter,
+        'user_products_count': user_products_count,
+        'user_products_total_views': user_products_total_views,
     }
     return render(request, "main.html", context)
 
