@@ -181,3 +181,24 @@ Tugas 5: Desain Web menggunakan HTML, CSS dan Framework CSS
         - Saya menetapkan skema warna ungu di seluruh aplikasi, mulai dari logo "SoCo", tombol, hingga link aktif untuk menciptakan identitas visual yang kuat.
         - Saya menambahkan hero section dengan gambar latar di halaman utama untuk meningkatkan daya tarik visual.
         - Saya melakukan beberapa perbaikan di luar tutorial, seperti mengganti link "Edit/Delete" dengan ikon, menambahkan indikator stok dinamis pada kartu produk, dan memformat harga (Rp 2.000.000) menggunakan django.contrib.humanize agar lebih mudah dibaca.
+
+Tugas 6: Javascript dan AJAX
+1. Apa perbedaan antara synchronous request dan asynchronous request?
+    Jawaban:
+        Perbedaan utama antara request synchronous dan asynchronous terletak pada bagaimana browser menangani alur kerja dan interaksi pengguna. Dalam model sinkron, browser akan mengirim permintaan dan "membeku" (blocking), memaksa pengguna untuk menunggu hingga respons diterima sebelum dapat melakukan hal lain. Sebaliknya, model asinkron memungkinkan browser mengirim permintaan di latar belakang (non-blocking) sementara pengguna tetap bebas berinteraksi dengan halaman. Pendekatan asinkron inilah yang digunakan oleh AJAX untuk menciptakan pengalaman pengguna yang mulus, cepat, dan responsif tanpa ada jeda yang mengganggu.
+
+2. Bagaimana AJAX bekerja di Django (alur request–response)?
+    Jawaban:
+        AJAX di Django bekerja dengan menciptakan jembatan antara aksi pengguna di browser dan logika di server tanpa me-reload halaman. Alurnya dimulai ketika sebuah event (seperti klik tombol) dicegat oleh JavaScript, yang kemudian membatalkan aksi default browser. JavaScript lalu menggunakan Fetch API untuk mengirim permintaan data ke URL Django yang spesifik. Di sisi server, view Django yang sesuai akan memproses permintaan ini, berinteraksi dengan database, dan mengembalikan data dalam format JSON menggunakan JsonResponse, bukan merender seluruh halaman HTML. Akhirnya, JavaScript di browser menerima data JSON ini dan secara dinamis memanipulasi DOM untuk memperbarui tampilan—seperti menambahkan produk baru atau menampilkan pesan sehingga perubahan terjadi secara instan di halaman yang sama.
+
+3. Apa keuntungan menggunakan AJAX dibandingkan render biasa di Django?
+    Jawaban:
+        Keuntungan utama menggunakan AJAX dibandingkan render biasa di Django adalah peningkatan drastis pada pengalaman pengguna (UX) dan efisiensi. Dengan AJAX, interaksi terasa instan karena halaman tidak perlu dimuat ulang seluruhnya, menghilangkan kedipan layar yang mengganggu dan membuat website terasa secepat aplikasi desktop. Selain itu, AJAX jauh lebih efisien dalam penggunaan bandwidth karena hanya data yang relevan (dalam format JSON yang ringan) yang dipertukarkan antara server dan klien, tidak seperti render biasa yang harus memuat ulang seluruh aset HTML, CSS, dan JavaScript. Hal ini tidak hanya mempercepat waktu muat tetapi juga mengurangi beban kerja pada server secara signifikan.
+
+4. Bagaimana cara memastikan keamanan saat menggunakan AJAX untuk fitur Login dan Register di Django?
+    Jawaban:
+        Untuk memastikan keamanan saat menggunakan AJAX untuk otentikasi, ada beberapa langkah krusial yang harus diterapkan. Pertama dan terpenting adalah menggunakan proteksi CSRF (Cross-Site Request Forgery) bawaan Django dengan cara menyertakan CSRF token di dalam header setiap request AJAX POST. Kedua, seluruh komunikasi wajib dienkripsi menggunakan HTTPS (SSL/TLS) untuk mencegah data sensitif seperti password dicuri dalam perjalanan. Terakhir, semua data yang dikirim dari form harus divalidasi ulang secara ketat di sisi server (views.py) untuk memastikan integritas data dan mencegah injeksi kode berbahaya, sambil tetap menggunakan mekanisme password hashing standar dari Django.
+
+5. Bagaimana AJAX mempengaruhi pengalaman pengguna (User Experience) pada website?
+    Jawaban:
+        AJAX secara fundamental mengubah pengalaman pengguna dengan membuat website terasa jauh lebih responsif, mulus, dan interaktif. Karena pembaruan konten terjadi di latar belakang tanpa me-reload halaman, pengguna tidak mengalami transisi yang kasar atau jeda yang mengganggu, sehingga menciptakan alur interaksi yang berkelanjutan. Hal ini memberikan persepsi kecepatan yang jauh lebih tinggi, karena pengguna mendapatkan umpan balik visual secara instan (seperti loading spinner atau toast notification) sambil tetap berada di konteks halaman yang sama. Hasilnya adalah pengalaman yang lebih memuaskan dan tidak membuat frustrasi, mirip dengan kelancaran saat menggunakan aplikasi di ponsel atau desktop.

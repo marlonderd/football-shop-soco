@@ -6,55 +6,365 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SoCo Football Shop</title>
     
-    {% block meta %}
-    {% endblock meta %}
+    {% block meta %}{% endblock meta %}
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
 
     <link rel="stylesheet" href="{% static 'css/global.css' %}"/>
   </head>
+
   <body class="bg-gray-100 flex flex-col min-h-screen">
 
     {% block navbar %}
-        {% include 'navbar.html' %}
+      {% include 'navbar.html' %}
     {% endblock navbar %}
 
     <main class="container mx-auto p-4 relative z-0 flex-grow">
-      {% block content %} 
-      {% endblock content %}
+      {% block content %}{% endblock content %}
     </main>
 
     <footer class="mt-auto py-6 border-t border-gray-200 bg-white">
-        <div class="container mx-auto text-center text-gray-500 text-sm">
-            &copy; {% now "Y" %} SoCo Football Shop. All Rights Reserved.
-        </div>
+      <div class="container mx-auto text-center text-gray-500 text-sm">
+        &copy; {% now "Y" %} SoCo Football Shop. All Rights Reserved.
+      </div>
     </footer>
-    <script>
-      const btn = document.querySelector("button.mobile-menu-button");
-      const menu = document.querySelector(".mobile-menu");
+
+    {% include 'toast.html' %}
+    <script src="{% static 'js/toast.js' %}"></script>
+
+    {% include 'modal.html' %}
+    {% include 'auth_modal.html' %}
+
+    {% block script %}
     
-      if (btn && menu) {
-        btn.addEventListener("click", () => {
-          menu.classList.toggle("hidden");
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+
+    const PRODUCTS_JSON_URL = "{% url 'main:show_json' %}";
+    const CURRENT_USER_USERNAME = "{{ user.username|default_if_none:'' }}";
+    const loadingSpinner = document.getElementById('loading');
+    const errorMessage = document.getElementById('error');
+    const emptyStateDisplay = document.getElementById('empty');
+    const productGridContainer = document.getElementById('product-grid');
+    const showAllProductsButton = document.getElementById('filter-all');
+    const showMyProductsButton = document.getElementById('filter-my');
+    const addProductBtnInfo = document.getElementById('btn-add-product');
+    const addProductBtnNav = document.getElementById('btn-add-product-nav');
+    const addProductBtnNavMobile = document.getElementById('btn-add-product-nav-mobile');
+    const categoryLinks = document.querySelectorAll('.category-link');
+
+    categoryLinks.forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault(); 
+
+            const category = link.dataset.category;
+            
+            const newUrl = category === 'all' ? window.location.pathname : `${window.location.pathname}?category=${category}`;
+            history.pushState({category: category}, '', newUrl);
+
+            if (category === 'all') {
+                activeFilter = 'all';
+                filterAndDisplayProducts();
+            } else {
+                const categoryFilteredProducts = allProductsData.filter(product => 
+                    product.category && product.category.toLowerCase() === category.toLowerCase()
+                );
+                
+                if (categoryFilteredProducts.length === 0) {
+                    displayPageSection({ showEmpty: true });
+                } else {
+                    renderAllProductCards(categoryFilteredProducts);
+                    displayPageSection({ showGrid: true });
+                }
+            }
+
+            categoryLinks.forEach(navLink => navLink.classList.remove('text-purple-700', 'font-bold'));
+            link.classList.add('text-purple-700', 'font-bold');
         });
-      }
+    });
 
-      const userMenuButton = document.querySelector("#user-menu-button");
-      const userMenu = document.querySelector("#user-menu");
+    let activeFilter = 'all';
+    let allProductsData = [];
 
-      if (userMenuButton && userMenu) {
-        userMenuButton.addEventListener("click", () => {
-          userMenu.classList.toggle("hidden");
-        });
+    function updateFilterButtonsAppearance() {
+        if (!showAllProductsButton || !showMyProductsButton) return;
+        showAllProductsButton.classList.toggle('active', activeFilter === 'all');
+        showMyProductsButton.classList.toggle('active', activeFilter === 'my');
+    }
 
-        // Opsional: Menutup dropdown saat mengklik di luar area
+    function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
+        if(loadingSpinner) loadingSpinner.classList.toggle('hidden', !showLoading);
+        if(errorMessage) errorMessage.classList.toggle('hidden', !showError);
+        if(emptyStateDisplay) emptyStateDisplay.classList.toggle('hidden', !showEmpty);
+        if(productGridContainer) productGridContainer.classList.toggle('hidden', !showGrid);
+    }
+
+    function buildProductCardElement(productItem) {
+        const articleElement = document.createElement('article');
+        articleElement.className = 'bg-white rounded-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full';
+        articleElement.setAttribute('data-product-id', productItem.pk); 
+        const detailLink = `{% url 'main:show_product' '000' %}`.replace('000', productItem.pk);
+        const name = DOMPurify.sanitize(productItem.name);
+        const description = DOMPurify.sanitize(productItem.description);
+        const category = DOMPurify.sanitize(productItem.category);
+        const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(productItem.price);
+        const hotBadge = productItem.is_hot ? `<span class='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'>🔥 Hot</span>` : '';
+        let stockBadge;
+        if (productItem.stock === 0) {
+            stockBadge = `<span class='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'>Sold Out</span>`;
+        } else if (productItem.stock <= 10) {
+            stockBadge = `<span class='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800'>Low Stock: ${productItem.stock}</span>`;
+        } else {
+            stockBadge = `<span class='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800'>In Stock: ${productItem.stock}</span>`;
+        }
+        const editDeleteButtons = CURRENT_USER_USERNAME && CURRENT_USER_USERNAME === productItem.user ? 
+            `<div class='flex items-center space-x-1'>
+                <button class='btn-edit p-2 text-gray-400 hover:text-purple-700 rounded-lg transition-colors' data-product-id='${productItem.pk}'><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                <button class='btn-delete p-2 text-gray-400 hover:text-red-600 rounded-lg transition-colors' data-product-id='${productItem.pk}'><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+            </div>` : '';
+        articleElement.innerHTML = `<div class="aspect-[4/3] relative overflow-hidden"><img src="${productItem.thumbnail || '{% static "image/placeholder.png" %}'}" alt="${name}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"><div class="absolute top-3 left-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-purple-700 text-white">${category}</span></div></div><div class="p-4 flex flex-col flex-1"><h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-2"><a href="${detailLink}" class="hover:text-purple-700">${name}</a></h3><p class="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow">${description}</p><div class="flex items-center justify-between mb-4">${stockBadge} ${hotBadge}</div><div class="text-2xl font-extrabold text-gray-900 mb-4">${formattedPrice}</div><div class="pt-4 border-t border-gray-100 flex items-center justify-between mt-auto"><a href="${detailLink}" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded-lg text-sm transition">View Details</a> ${editDeleteButtons}</div></div>`;
+        return articleElement;
+    }
+
+    function renderAllProductCards(products) {
+        if (!productGridContainer) return;
+        productGridContainer.innerHTML = ''; 
+        products.forEach(productItem => productGridContainer.appendChild(buildProductCardElement(productItem)));
+    }
+
+    function filterAndDisplayProducts() {
+        updateFilterButtonsAppearance();
+        const filteredProducts = activeFilter === 'all' ? allProductsData : allProductsData.filter(product => product.user === CURRENT_USER_USERNAME);
+        if (filteredProducts.length === 0) {
+            displayPageSection({ showEmpty: true });
+        } else {
+            renderAllProductCards(filteredProducts);
+            displayPageSection({ showGrid: true });
+        }
+    }
+
+    async function fetchProductsFromServer() {
+      try {
+          displayPageSection({ showLoading: true });
+          const response = await fetch(PRODUCTS_JSON_URL); 
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          
+          const products = await response.json();
+          allProductsData = products || [];
+
+          const urlParams = new URLSearchParams(window.location.search);
+          const categoryFromUrl = urlParams.get('category');
+
+          if (categoryFromUrl) {
+              const categoryFilteredProducts = allProductsData.filter(product => 
+                  product.category && product.category.toLowerCase() === categoryFromUrl.toLowerCase()
+              );
+
+              if (categoryFilteredProducts.length === 0) {
+                  displayPageSection({ showEmpty: true });
+              } else {
+                  renderAllProductCards(categoryFilteredProducts);
+                  displayPageSection({ showGrid: true });
+              }
+              if (showAllProductsButton) showAllProductsButton.classList.remove('active');
+              if (showMyProductsButton) showMyProductsButton.classList.remove('active');
+
+          } else {
+              filterAndDisplayProducts();
+          }
+
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        if(errorMessage) errorMessage.innerHTML = `<p class="text-red-500 text-center">Failed to load products. Please try again later.</p>`;
+        displayPageSection({ showError: true });
+    }
+}
+
+    async function handleEditProduct(productId) {
+        const url = `{% url 'main:edit_product_ajax' 0 %}`.replace('0', productId);
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to fetch product data.');
+            const productData = await response.json();
+            showModalForEdit(productData); 
+        } catch (error) {
+            console.error('Error fetching product for edit:', error);
+            showToast('Error', 'Could not load product data for editing.', 'error');
+        }
+    }
+
+    async function handleDeleteProduct(productId) {
+        if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
+        const url = `{% url 'main:delete_product_ajax' 0 %}`.replace('0', productId);
+        try {
+            const response = await fetch(url, { method: 'POST' });
+            const data = await response.json();
+            if (response.ok) {
+                showToast('Success!', data.message, 'success');
+                fetchProductsFromServer(); 
+            } else {
+                throw new Error(data.message || 'Failed to delete product.');
+            }
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            showToast('Error', error.message, 'error');
+        }
+    }
+
+    const mobileMenuButton = document.querySelector('.mobile-menu-button');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    if (mobileMenuButton) mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+    const authModal = document.getElementById('authModal');
+    const authModalContent = document.getElementById('authModalContent');
+    const authModalTitle = document.getElementById('auth-modal-title');
+    const closeModalBtn = document.getElementById('auth-modal-close-btn');
+    const loginView = document.getElementById('login-view');
+    const registerView = document.getElementById('register-view');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const authErrorDiv = document.getElementById('auth-error-message');
+    const switchToRegisterBtn = document.getElementById('switchToRegister');
+    const switchToLoginBtn = document.getElementById('switchToLogin');
+    const showLoginModalBtn = document.getElementById('btn-login-modal');
+    const showRegisterModalBtn = document.getElementById('btn-register-modal');
+    const showLoginModalBtnMobile = document.getElementById('btn-login-modal-mobile');
+    const showRegisterModalBtnMobile = document.getElementById('btn-register-modal-mobile');
+    const logoutBtn = document.getElementById('btn-logout');
+    const logoutBtnMobile = document.getElementById('btn-logout-mobile');
+
+    const btn = document.querySelector("button.mobile-menu-button");
+    const menu = document.querySelector(".mobile-menu");
+    
+    if (btn && menu) {
+    btn.addEventListener("click", () => {
+        menu.classList.toggle("hidden");
+    });
+    }
+
+    const userMenuButton = document.querySelector("#user-menu-button");
+    const userMenu = document.querySelector("#user-menu");
+
+    if (userMenuButton && userMenu) {
+        userMenuButton.addEventListener("click", (e) => {
+        e.stopPropagation(); 
+        userMenu.classList.toggle("hidden");
+       });
+
         document.addEventListener('click', function(event) {
-          const isClickInside = userMenuButton.contains(event.target) || userMenu.contains(event.target);
-          if (!isClickInside) {
+        const isClickInside = userMenuButton.contains(event.target) || userMenu.contains(event.target);
+        if (!isClickInside) {
             userMenu.classList.add('hidden');
           }
         });
       }
-    </script>
-    </body>
+    
+    function showAuthModal(view = 'login') {
+        if (!authModal || !authModalContent) return;
+        authErrorDiv.classList.add('hidden');
+        authModal.classList.remove('hidden');
+        setTimeout(() => authModalContent.classList.remove('opacity-0', 'scale-95'), 10);
+        if (view === 'register') {
+            loginView.classList.add('hidden');
+            registerView.classList.remove('hidden');
+            authModalTitle.textContent = 'Create an Account';
+        } else {
+            registerView.classList.add('hidden');
+            loginView.classList.remove('hidden');
+            authModalTitle.textContent = 'Login to SoCo';
+        }
+    }
+    
+    function hideAuthModal() {
+        if (!authModal || !authModalContent) return;
+        authModalContent.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => authModal.classList.add('hidden'), 150);
+    }
+    
+    function showAuthError(message) {
+        authErrorDiv.textContent = message;
+        authErrorDiv.classList.remove('hidden');
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const formData = new FormData(loginForm);
+        try {
+            const response = await fetch("{% url 'main:login_ajax' %}", { method: "POST", body: formData });
+            const data = await response.json();
+            if (response.ok) {
+                hideAuthModal();
+                showToast('Welcome!', `Successfully logged in as ${data.username}.`, 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showAuthError("Login failed. Please check your username and password.");
+            }
+        } catch (error) { showAuthError("An error occurred. Please try again."); }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const formData = new FormData(registerForm);
+        if (formData.get('password') !== formData.get('password2')) {
+            showAuthError("Passwords do not match.");
+            return;
+        }
+        try {
+            const response = await fetch("{% url 'main:register_ajax' %}", { method: "POST", body: formData });
+            const data = await response.json();
+            if (response.ok) {
+                registerForm.reset();
+                showToast('Success!', 'Registration successful. Please log in.', 'success');
+                showAuthModal('login');
+            } else {
+                showAuthError("Registration failed. This username might be taken.");
+            }
+        } catch (error) { showAuthError("An error occurred. Please try again."); }
+    }
+
+    async function handleLogout() {
+        try {
+            const response = await fetch("{% url 'main:logout_ajax' %}", { method: "POST" });
+            if (response.ok) {
+                showToast('Logged Out', 'You have been successfully logged out.', 'info');
+                setTimeout(() => window.location.reload(), 1500);
+            } else { throw new Error("Logout failed."); }
+        } catch (error) { showToast('Error', "An error occurred during logout.", 'error'); }
+    }
+
+    if (showAllProductsButton) showAllProductsButton.addEventListener('click', () => { activeFilter = 'all'; filterAndDisplayProducts(); });
+    if (showMyProductsButton) showMyProductsButton.addEventListener('click', () => { activeFilter = 'my'; filterAndDisplayProducts(); });
+    if (addProductBtnInfo) addProductBtnInfo.addEventListener('click', () => showModalForCreate());
+    if (addProductBtnNav) addProductBtnNav.addEventListener('click', () => showModalForCreate());
+    if (addProductBtnNavMobile) addProductBtnNavMobile.addEventListener('click', () => showModalForCreate());
+    if (productGridContainer) productGridContainer.addEventListener('click', (event) => {
+        const editButton = event.target.closest('.btn-edit');
+        if (editButton) handleEditProduct(editButton.dataset.productId);
+        const deleteButton = event.target.closest('.btn-delete');
+        if (deleteButton) handleDeleteProduct(deleteButton.dataset.productId);
+    });
+    document.addEventListener('productModified', () => fetchProductsFromServer());
+
+    if (showLoginModalBtn) showLoginModalBtn.addEventListener('click', () => showAuthModal('login'));
+    if (showRegisterModalBtn) showRegisterModalBtn.addEventListener('click', () => showAuthModal('register'));
+    if (showLoginModalBtnMobile) showLoginModalBtnMobile.addEventListener('click', () => showAuthModal('login'));
+    if (showRegisterModalBtnMobile) showRegisterModalBtnMobile.addEventListener('click', () => showAuthModal('register'));
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    if (logoutBtnMobile) logoutBtnMobile.addEventListener('click', handleLogout);
+    if (switchToRegisterBtn) switchToRegisterBtn.addEventListener('click', () => showAuthModal('register'));
+    if (switchToLoginBtn) switchToLoginBtn.addEventListener('click', () => showAuthModal('login'));
+    if (closeModalBtn) closeModalBtn.addEventListener('click', hideAuthModal);
+    if (authModal) authModal.addEventListener('click', (e) => { if (e.target === authModal) hideAuthModal(); });
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+    if (registerForm) registerForm.addEventListener('submit', handleRegister);
+
+    if(productGridContainer) {
+        fetchProductsFromServer();
+    }
+});
+</script>
+    {% endblock script %}
+  </body>
 </html>

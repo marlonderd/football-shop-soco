@@ -6,15 +6,12 @@
 {% endblock meta %}
 
 {% block content %}
-{% include 'navbar.html' %}
 <div class="bg-gray-50 w-full pt-16 min-h-screen">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <div class="relative rounded-lg overflow-hidden mb-8" style="height: 400px;">
       <img src="{% static 'image/banner.png' %}" class="absolute inset-0 w-full h-full object-cover" alt="SoCo Banner">
-
       <div class="absolute inset-0 bg-black bg-opacity-65 backdrop-blur-sm"></div>
-      
       <div class="relative h-full flex flex-col justify-center items-start p-8 md:p-12">
         <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-4 drop-shadow-lg">
           Your Ultimate<br>Football Store
@@ -37,35 +34,15 @@
     {% if user.is_authenticated %}
     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
         <div class="flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center gap-6">
-                <h1 class="text-xl font-bold text-gray-800">
-                    Welcome, <span class="text-purple-700">{{ user.username }}</span>!
-                </h1>
-                <div class="hidden sm:flex items-center space-x-4 border-l border-gray-200 pl-6">
-                    <div>
-                        <p class="text-xs text-gray-500">Products Added</p>
-                        <p class="text-lg font-bold text-gray-800">{{ user_products_count }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Total Product Views</p>
-                        <p class="text-lg font-bold text-gray-800">{{ user_products_total_views }}</p>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <a href="{% url 'main:create_product' %}" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
-                    + Add New Product
-                </a>
-            </div>
+            <h1 class="text-xl font-bold text-gray-800">Welcome, <span class="text-purple-700">{{ user.username }}</span>!</h1>
+            <button id="btn-add-product" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
+                + Add New Product
+            </button>
         </div>
         <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
             <div class="flex space-x-3">
-                <a href="{% url 'main:show_main' %}" class="{% if not request.GET.filter or request.GET.filter == 'all' %} bg-purple-700 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors text-sm hover:bg-purple-100 hover:text-purple-700">
-                  All Products
-                </a>
-                <a href="?filter=my" class="{% if request.GET.filter == 'my' %} bg-purple-700 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors text-sm hover:bg-purple-100 hover:text-purple-700">
-                  My Products
-                </a>
+                <button id="filter-all" class="filter-btn active">All Products</button>
+                <button id="filter-my" class="filter-btn">My Products</button>
             </div>
             <div class="text-sm text-gray-500">
               Last login: {{ last_login }}
@@ -74,25 +51,27 @@
     </div>
     {% endif %}
 
-    {% if not product_list %}
-      <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <div class="w-32 h-32 mx-auto mb-4">
-          
-          <img src="{% static 'image/no-products.png' %}" alt="No products available" class="w-full h-full object-contain">
+    <div id="loading" class="text-center py-12 hidden">
+      <svg class="animate-spin h-8 w-8 text-purple-700 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <p class="text-gray-600 mt-3">Loading products...</p>
+    </div>
+
+    <div id="error" class="hidden"></div>
+
+    <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-        <p class="text-gray-500 mb-6">There are no products in the shop yet. Add one now!</p>
-        <a href="{% url 'main:create_product' %}" class="inline-flex items-center px-4 py-2 bg-purple-700 text-white rounded-md hover:bg-purple-800 transition-colors">
-          + Add Product
-        </a>
+
+    <div id="empty" class="bg-white rounded-lg border border-gray-200 p-12 text-center hidden">
+      <div class="w-32 h-32 mx-auto mb-4">
+        <img src="{% static 'image/no-products.png' %}" alt="No products available" class="w-full h-full object-contain">
       </div>
-    {% else %}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for product in product_list %}
-          {% include 'card_product.html' with product=product %}
-        {% endfor %}
-      </div>
-    {% endif %}
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+      <p class="text-gray-500 mb-6">There are no products in the shop yet. Try adding one!</p>
+    </div>
+
   </div>
 </div>
 {% endblock content %}
