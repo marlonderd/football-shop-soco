@@ -14,6 +14,11 @@ from django.db.models import Sum
 from django.http import HttpResponseRedirect, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Product
+from django.contrib.auth.decorators import login_required
+import requests
 
 def show_main(request):
     product_filter = request.GET.get('filter')
@@ -289,4 +294,50 @@ def logout_ajax(request):
         return JsonResponse({"status": "success", "message": "You have been logged out."}, status=200)
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
 
+@csrf_exempt
+def create_product_flutter(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            new_product = Product.objects.create(
+                user=request.user,
+                name=data["name"],
+                price=int(data["price"]),
+                description=data["description"],
+                category=data["category"],
+                stock=int(data.get("stock", 0)),      
+                thumbnail=data.get("thumbnail", ""),  
+                is_featured=data.get("is_featured", False)      
+            )
+            
+            new_product.save()
+            
+            return JsonResponse({"status": "success"}, status=200)
+        except Exception as e:
+            print(f"Error creating product: {e}") 
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+            
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)
+
+@login_required(login_url='/auth/login') # Opsional, tapi disarankan
+def show_json_by_user(request):
+    # Tambahkan pengecekan manual jika decorator tidak bekerja di API
+    if not request.user.is_authenticated:
+         return JsonResponse({"status": False, "message": "Belum login"}, status=401)
+
+    data = Product.objects.filter(user=request.user)
+    return HttpResponse(serializers.serialize("json", data), content_type="application/json")
+
+def proxy_image(request):
+    url = request.GET.get('url')
+    if not url:
+        return HttpResponse(status=400)
+    
+    try:
+        # Django mengambil gambar dari server luar
+        response = requests.get(url)
+        # Mengirimkan kembali gambar tersebut ke Flutter
+        return HttpResponse(response.content, content_type=response.headers.get('Content-Type', 'image/jpeg'))
+    except Exception as e:
+        return HttpResponse(status=500)
 # Create your views here.

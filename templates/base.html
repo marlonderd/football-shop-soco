@@ -195,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    
     async function handleDeleteProduct(productId) {
         if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
         const url = `{% url 'main:delete_product_ajax' 0 %}`.replace('0', productId);

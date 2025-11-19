@@ -202,3 +202,4 @@ Tugas 6: Javascript dan AJAX
 5. Bagaimana AJAX mempengaruhi pengalaman pengguna (User Experience) pada website?
     Jawaban:
         AJAX secara fundamental mengubah pengalaman pengguna dengan membuat website terasa jauh lebih responsif, mulus, dan interaktif. Karena pembaruan konten terjadi di latar belakang tanpa me-reload halaman, pengguna tidak mengalami transisi yang kasar atau jeda yang mengganggu, sehingga menciptakan alur interaksi yang berkelanjutan. Hal ini memberikan persepsi kecepatan yang jauh lebih tinggi, karena pengguna mendapatkan umpan balik visual secara instan (seperti loading spinner atau toast notification) sambil tetap berada di konteks halaman yang sama. Hasilnya adalah pengalaman yang lebih memuaskan dan tidak membuat frustrasi, mirip dengan kelancaran saat menggunakan aplikasi di ponsel atau desktop.
+
